@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ClipLoader from "react-spinners/ClipLoader";
-
 function SignIn() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     username: '',
     password: ''
@@ -122,6 +123,8 @@ function SignIn() {
           <div className="text-sm mt-2">
             Don't have an account? <a href="/signup" className="text-blue-600 underline">Sign Up</a>
           </div>
+          <div className='w-[90%] px-20 cursor-pointer'
+          onClick={()=>navigate("/forgot-password")} >Forgot Password</div>
         </div>
 
       </div>
