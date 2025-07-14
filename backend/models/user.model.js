@@ -53,7 +53,17 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Story'
     },
-
+    // Reset Password Fields
+    resetOtp:{
+    type: String,
+},
+    otpExpiresAt:{
+    type: Date,
+},
+   isOtpVerified:{
+    type: Boolean,
+    default: false,
+}
 
 
 }, { timestamps: true });

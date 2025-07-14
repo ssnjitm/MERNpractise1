@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ClipLoader from "react-spinners/ClipLoader";
 
 function ForgotPassword() {
   const [step, setStep] = useState(1);
@@ -7,36 +8,103 @@ function ForgotPassword() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setStep(2);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [color, setColor] = useState("#fff");
+  
+  const override = {
+    display: "block",
+    margin: "0 auto",
   };
 
-  const handleOtpSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setStep(3);
+    setError('');
+    setLoading(true);
+    
+    try {
+      const res = await fetch('http://localhost:8000/api/auth/sendOtp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        setError(data.message || 'Failed to send OTP');
+      } else {
+        setStep(2);
+      }
+    } catch (err) {
+      setError('Network error');
+    }
+    setLoading(false);
   };
 
-  const handlePasswordSubmit = (e) => {
+  const handleOtpSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+    
+    try {
+      const res = await fetch('http://localhost:8000/api/auth/verifyOtp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp })
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        setError(data.message || 'Invalid OTP');
+      } else {
+        setStep(3);
+      }
+    } catch (err) {
+      setError('Network error');
+    }
+    setLoading(false);
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
     
     if (newPassword !== confirmPassword) {
       setPasswordError("Passwords don't match");
       return;
     }
     
-    if (newPassword.length < 8) {
-      setPasswordError("Password must be at least 8 characters");
+    if (newPassword.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
       return;
     }
     
-    // Password reset logic here
-    setStep(4); // Success step
+    setLoading(true);
+    
+    try {
+      const res = await fetch('http://localhost:8000/api/auth/resetPassword', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: newPassword })
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        setError(data.message || 'Password reset failed');
+      } else {
+        setStep(4);
+      }
+    } catch (err) {
+      setError('Network error');
+    }
+    setLoading(false);
   };
 
   return (
-    <div className='w-full min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex justify-center items-center p-4'>
+    <div className='w-full h-screen bg-gradient-to-b from-black to-gray-900 flex justify-center items-center'>
       {step === 1 && (
         <div className="w-full max-w-md bg-white rounded-xl shadow-2xl overflow-hidden">
           <div className="p-8">
@@ -44,6 +112,8 @@ function ForgotPassword() {
               <h2 className="text-3xl font-bold text-gray-800 mb-2">Forgot Password</h2>
               <p className="text-gray-600">Enter your email to receive an OTP</p>
             </div>
+            
+            {error && <div className="text-red-500 text-sm mb-4 text-center">{error}</div>}
             
             <form onSubmit={handleSubmit}>
               <div className="mb-6">
@@ -63,15 +133,26 @@ function ForgotPassword() {
               
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex justify-center items-center"
+                disabled={loading}
               >
-                Send OTP
+                {loading ? (
+                  <ClipLoader
+                    color={color}
+                    loading={loading}
+                    cssOverride={override}
+                    size={20}
+                    aria-label="Loading Spinner"
+                  />
+                ) : (
+                  "Send OTP"
+                )}
               </button>
             </form>
             
             <div className="text-center mt-6">
-              <a href="/login" className="text-blue-500 hover:text-blue-600 text-sm transition duration-200">
-                Back to Login
+              <a href="/signin" className="text-blue-500 hover:text-blue-600 text-sm transition duration-200">
+                Back to Sign In
               </a>
             </div>
           </div>
@@ -89,9 +170,11 @@ function ForgotPassword() {
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">Verify OTP</h2>
               <p className="text-gray-600">
-                We've sent a 6-digit code to <span className="text-gray-800 font-medium">{email}</span>
+                We've sent a 4-digit code to <span className="text-gray-800 font-medium">{email}</span>
               </p>
             </div>
+            
+            {error && <div className="text-red-500 text-sm mb-4 text-center">{error}</div>}
             
             <form onSubmit={handleOtpSubmit}>
               <div className="mb-6">
@@ -103,8 +186,8 @@ function ForgotPassword() {
                   id="otp"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
-                  placeholder="123456"
-                  maxLength="6"
+                  placeholder="1234"
+                  maxLength="4"
                   className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 focus:border-blue-500 focus:outline-none text-gray-800 placeholder-gray-400 transition duration-200 text-center text-xl tracking-widest"
                   required
                 />
@@ -112,13 +195,30 @@ function ForgotPassword() {
               
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 mb-4"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 mb-4 flex justify-center items-center"
+                disabled={loading}
               >
-                Verify & Continue
+                {loading ? (
+                  <ClipLoader
+                    color={color}
+                    loading={loading}
+                    cssOverride={override}
+                    size={20}
+                    aria-label="Loading Spinner"
+                  />
+                ) : (
+                  "Verify & Continue"
+                )}
               </button>
               
               <div className="text-center text-sm text-gray-500">
-                Didn't receive code? <button type="button" className="text-blue-500 hover:text-blue-600 font-medium">Resend OTP</button>
+                Didn't receive code? <button 
+                  type="button" 
+                  className="text-blue-500 hover:text-blue-600 font-medium"
+                  onClick={handleSubmit}
+                >
+                  Resend OTP
+                </button>
               </div>
             </form>
           </div>
@@ -137,6 +237,8 @@ function ForgotPassword() {
               <h2 className="text-2xl font-bold text-gray-800 mb-2">Set New Password</h2>
               <p className="text-gray-600">Create a strong, new password for your account</p>
             </div>
+            
+            {error && <div className="text-red-500 text-sm mb-4 text-center">{error}</div>}
             
             <form onSubmit={handlePasswordSubmit}>
               <div className="mb-4">
@@ -174,9 +276,20 @@ function ForgotPassword() {
               
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex justify-center items-center"
+                disabled={loading}
               >
-                Reset Password
+                {loading ? (
+                  <ClipLoader
+                    color={color}
+                    loading={loading}
+                    cssOverride={override}
+                    size={20}
+                    aria-label="Loading Spinner"
+                  />
+                ) : (
+                  "Reset Password"
+                )}
               </button>
             </form>
           </div>
@@ -197,10 +310,10 @@ function ForgotPassword() {
             </p>
             
             <a
-              href="/login"
+              href="/signin"
               className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200"
             >
-              Back to Login
+              Back to Sign In
             </a>
           </div>
         </div>
