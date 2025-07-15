@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import ClipLoader from "react-spinners/ClipLoader";
+import { setUserData } from '../redux/userSlice';
+
 function SignUp() {
- 
+  const dispatch = useDispatch();
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -10,49 +13,58 @@ function SignUp() {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // Password toggler
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [color, setColor] = useState("#fff");
   const override = {
-  display: "block",
-  margin: "0 auto",
-};
+    display: "block",
+    margin: "0 auto",
+  };
+
+  // Example action for signup (replace with your actual action)
+  // const signupAction = (userData) => ({
+  //   type: "SIGNUP",
+  //   payload: userData,
+  // });
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError('');
     setSuccess('');
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
-  setSuccess('');
-  setLoading(true);
-  try {
-    const res = await fetch('http://localhost:8000/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.message || 'Sign up failed');
-    } else {
-      setSuccess('Sign up successful! You can now sign in.');
-      setForm({ name: '', email: '', username: '', password: '' });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+    try {
+      const res = await fetch('http://localhost:8000/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || 'Sign up failed');
+      } else {
+        setSuccess('Sign up successful! You can now sign in.');
+        setForm({ name: '', email: '', username: '', password: '' });
+        // Dispatch signup action with user data (you can adjust as needed)
+        dispatch(setUserData(result.data));
+      }
+    } catch (err) {
+      setError('Network error');
     }
-  } catch (err) {
-    setError('Network error');
-  }
-  setLoading(false);
-};
+    setLoading(false);
+  };
 
   return (
     <div className='w-full h-screen bg-gradient-to-b from-black to-gray-900 flex justify-center items-center'>
       <div className='w-[90%] lg:max-w-[60%] h-[600px] bg-white rounded-2xl flex overflow-hidden border-2 border-[#1a1f23]'>
 
         {/* Left Side - Form Panel */}
-       <div className='hidden lg:flex w-[50%] h-full flex-col items-center p-[10px] gap-[20px] justify-center bg-white'>
+        <div className='hidden lg:flex w-[50%] h-full flex-col items-center p-[10px] gap-[20px] justify-center bg-white'>
           <span className="text-xl font-semibold text-gray-700">
             Sign up to
           </span>
@@ -64,13 +76,13 @@ function SignUp() {
         </div>
 
         {/* Right Side - Info Panel */}
-       <div className='w-full lg:w-[50%] h-full flex flex-col justify-center items-center bg-black gap-[10px] text-white text-[16px] font-semibold shadow-2xl shadow-black'>
+        <div className='w-full lg:w-[50%] h-full flex flex-col justify-center items-center bg-black gap-[10px] text-white text-[16px] font-semibold shadow-2xl shadow-black'>
           <div className=' flex flex-col items-center'>
             <img src="src/assets/signin.png" alt="image"  className="w-35 h-35  rounded-full" />
             <span className="ml-6 text-1xl ">I'm Registering you to RamailoNepal</span>
           </div>
-           {error && <div className="text-red-500 text-sm">{error}</div>}
-            {success && <div className="text-green-600 text-sm">{success}</div>}
+          {error && <div className="text-red-500 text-sm">{error}</div>}
+          {success && <div className="text-green-600 text-sm">{success}</div>}
           <form className="flex flex-col gap-4 w-full max-w-xs" onSubmit={handleSubmit}>
             <input
               type="text"
@@ -119,25 +131,24 @@ function SignUp() {
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
-           <button
-  type="submit"
-  className="bg-gray text-white p-3 rounded-full hover:bg-gray-800 transition flex items-center justify-center"
-  disabled={loading}
->
-  {loading ? (
-    <ClipLoader
-      color={color}
-      loading={loading}
-      cssOverride={override}
-      size={24}
-      aria-label="Loading Spinner"
-      data-testid="loader"
-    />
-  ) : (
-    "Sign Up"
-  )}
-</button>
-           
+            <button
+              type="submit"
+              className="bg-gray text-white p-3 rounded-full hover:bg-gray-800 transition flex items-center justify-center"
+              disabled={loading}
+            >
+              {loading ? (
+                <ClipLoader
+                  color={color}
+                  loading={loading}
+                  cssOverride={override}
+                  size={24}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              ) : (
+                "Sign Up"
+              )}
+            </button>
           </form>
           <div className="text-sm mt-2">
             Already have an account? <a href="/signin" className="text-blue-600 underline">Sign In</a>

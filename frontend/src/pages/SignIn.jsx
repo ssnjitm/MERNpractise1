@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ClipLoader from "react-spinners/ClipLoader";
+import { useDispatch } from 'react-redux';
+import { setUserData } from '../redux/userSlice';
+
 function SignIn() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     username: '',
@@ -40,6 +44,8 @@ function SignIn() {
       } else {
         setSuccess('Sign in successful!');
         // You can redirect or save token here
+
+         dispatch(setUserData(result.data));
       }
     } catch (err) {
       setError('Network error');
